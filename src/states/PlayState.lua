@@ -41,6 +41,10 @@ function PlayState:update(dt)
         end
     end
 
+    if love.keyboard.isDown('space') then
+        self.level.launchMarker:tripleFire()
+    end
+
     self.level:update(dt)
 end
 

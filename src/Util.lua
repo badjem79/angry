@@ -16,3 +16,15 @@ function GenerateQuads(atlas, tilewidth, tileheight)
 
     return spritesheet
 end
+
+function rotateAround(pointToRotate, centerPoint, angleInDegrees)
+
+    local angleInRadians = angleInDegrees * (math.pi / 180)
+    local cosTheta = math.cos(angleInRadians)
+    local sinTheta = math.sin(angleInRadians)
+    return (cosTheta * (pointToRotate.X - centerPoint.X) -
+            sinTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.X),
+            (sinTheta * (pointToRotate.X - centerPoint.X) +
+            cosTheta * (pointToRotate.Y - centerPoint.Y) + centerPoint.Y)
+
+end

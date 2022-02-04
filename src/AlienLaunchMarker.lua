@@ -26,9 +26,68 @@ function AlienLaunchMarker:init(world)
     self.launched = false
 
     -- our alien we will eventually spawn
-    self.alien = nil
+    self.aliens = {}
 end
 
+function AlienLaunchMarker:tripleFire()
+    if #self.aliens == 1 and self.launched == true then
+        
+        local xPos, yPos = self.aliens[1].body:getPosition()
+        local xVel, yVel = self.aliens[1].body:getLinearVelocity()
+
+        local totVel = math.abs(xVel) + math.abs(yVel)
+
+        if (totVel > 0) then
+            local distance = 18
+            local impulse = 50
+            local propX = xVel / totVel -- -1 to 1
+            local propY = yVel / totVel -- -1 to 1
+
+            local x1, y1 = rotateAround({
+                X=xPos + (propX*distance),
+                Y=yPos + (propY*distance)
+            }, {
+                X=xPos,
+                Y=yPos
+            }, 90)
+            local x2, y2 = rotateAround({
+                X=xPos + (propX*distance),
+                Y=yPos + (propY*distance)
+            }, {
+                X=xPos,
+                Y=yPos
+            }, -90)
+
+            self:addNewAlien(x1, y1, xVel, yVel)
+            self:addNewAlien(x2, y2, xVel, yVel)
+
+            propX, propY = rotateAround({
+                X=propX,
+                Y=propY
+            }, {
+                X=0,
+                Y=0
+            }, 90)
+
+            self.aliens[2].body:applyLinearImpulse(propX * impulse, propY * impulse)
+            self.aliens[3].body:applyLinearImpulse(-propX * impulse, -propY * impulse)
+        end
+    end
+end
+
+function AlienLaunchMarker:addNewAlien(xPos, yPos, xVel, yVel)
+
+    local alien = Alien(self.world, 'round', xPos, yPos, 'Player')
+    -- same velocity as the first alien
+    alien.body:setLinearVelocity(xVel, yVel)
+
+    -- make the alien pretty bouncy
+    alien.fixture:setRestitution(0.4)
+    alien.body:setAngularDamping(1)
+
+    table.insert(self.aliens, alien)
+
+end
 function AlienLaunchMarker:update(dt)
     
     -- perform everything here as long as we haven't launched yet
@@ -45,15 +104,7 @@ function AlienLaunchMarker:update(dt)
         elseif love.mouse.wasReleased(1) and self.aiming then
             self.launched = true
 
-            -- spawn new alien in the world, passing in user data of player
-            self.alien = Alien(self.world, 'round', self.shiftedX, self.shiftedY, 'Player')
-
-            -- apply the difference between current X,Y and base X,Y as launch vector impulse
-            self.alien.body:setLinearVelocity((self.baseX - self.shiftedX) * 10, (self.baseY - self.shiftedY) * 10)
-
-            -- make the alien pretty bouncy
-            self.alien.fixture:setRestitution(0.4)
-            self.alien.body:setAngularDamping(1)
+            self:addNewAlien(self.shiftedX, self.shiftedY, (self.baseX - self.shiftedX) * 10, (self.baseY - self.shiftedY) * 10)
 
             -- we're no longer aiming
             self.aiming = false
@@ -103,6 +154,8 @@ function AlienLaunchMarker:render()
         
         love.graphics.setColor(1, 1, 1, 1)
     else
-        self.alien:render()
+        for k, alien in pairs(self.aliens) do
+            alien:render()
+        end
     end
 end

@@ -109,6 +109,7 @@ function Level:init()
 
     -- simple edge shape to represent collision for ground
     self.edgeShape = love.physics.newEdgeShape(0, 0, VIRTUAL_WIDTH * 3, 0)
+    self.rightEdgeShape = love.physics.newEdgeShape(0, 0, 0, VIRTUAL_HEIGHT)
 
     -- spawn an alien to try and destroy
     table.insert(self.aliens, Alien(self.world, 'square', VIRTUAL_WIDTH - 80, VIRTUAL_HEIGHT - TILE_SIZE - ALIEN_SIZE / 2, 'Alien'))
@@ -126,6 +127,12 @@ function Level:init()
     self.groundFixture = love.physics.newFixture(self.groundBody, self.edgeShape)
     self.groundFixture:setFriction(0.5)
     self.groundFixture:setUserData('Ground')
+
+    -- right boundry
+    self.rigthBody = love.physics.newBody(self.world, VIRTUAL_WIDTH, 0, 'static')
+    self.rigthFixture = love.physics.newFixture(self.rigthBody, self.rightEdgeShape)
+    self.rigthFixture:setFriction(0.5)
+    self.rigthFixture:setUserData('Ground')
 
     -- background graphics
     self.background = Background()
@@ -172,12 +179,18 @@ function Level:update(dt)
 
     -- replace launch marker if original alien stopped moving
     if self.launchMarker.launched then
-        local xPos, yPos = self.launchMarker.alien.body:getPosition()
-        local xVel, yVel = self.launchMarker.alien.body:getLinearVelocity()
-        
-        -- if we fired our alien to the left or it's almost done rolling, respawn
-        if xPos < 0 or (math.abs(xVel) + math.abs(yVel) < 1.5) then
-            self.launchMarker.alien.body:destroy()
+        for i = #self.launchMarker.aliens, 1, -1 do
+            alien = self.launchMarker.aliens[i]
+            local xPos, yPos = alien.body:getPosition()
+            local xVel, yVel = alien.body:getLinearVelocity()
+            
+            -- if we fired our alien to the left or it's almost done rolling, respawn
+            if xPos < 0 or (math.abs(xVel) + math.abs(yVel) < 1.5) then
+                alien.body:destroy()
+                table.remove(self.launchMarker.aliens, i)
+            end
+        end
+        if #self.launchMarker.aliens == 0 then
             self.launchMarker = AlienLaunchMarker(self.world)
 
             -- re-initialize level if we have no more aliens
