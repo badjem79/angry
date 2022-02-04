@@ -73,6 +73,10 @@ function Level:init()
             end
         end
 
+        if types['Player'] then
+            self.launchMarker.aliens[1].anyContact = true
+        end
+
         -- if we hit the ground, play a bounce sound
         if types['Player'] and types['Ground'] then
             gSounds['bounce']:stop()

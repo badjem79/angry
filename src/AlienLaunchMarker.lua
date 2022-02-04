@@ -30,7 +30,7 @@ function AlienLaunchMarker:init(world)
 end
 
 function AlienLaunchMarker:tripleFire()
-    if #self.aliens == 1 and self.launched == true then
+    if #self.aliens == 1 and self.aliens[1].anyContact == false and self.launched == true then
         
         local xPos, yPos = self.aliens[1].body:getPosition()
         local xVel, yVel = self.aliens[1].body:getLinearVelocity()
